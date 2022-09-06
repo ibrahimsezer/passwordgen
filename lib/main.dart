@@ -1,16 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:crypto/crypto.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/password.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
-import 'package:hive/hive.dart';
 
 void main() async {
-
   await Hive.initFlutter();
   runApp(
     MultiProvider(
@@ -53,34 +46,66 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    var screenSize = MediaQuery.of(context).size;
+    return SafeArea(
+      //appBardan alan kurtarma
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          hoverColor: Colors.transparent,
+          backgroundColor: Colors.grey,
+          child: const Icon(
+            Icons.add,
+            size: 40.0,
+          ),
+          onPressed: () async {},
+        ),
+        body: Stack(
           children: [
-            SizedBox(
-              width: 350,
-              height: 100,
-              child: TextFormField(
-                controller: _controllerMaster,
-                decoration: const InputDecoration(hintText: "Master Key"),
+            Center(
+              child: SizedBox(
+                width: screenSize.width / 1.1,
+                child: TextFormField(
+                  controller: _controllerMaster,
+                  decoration: InputDecoration(
+                      hintText: "Master Key",
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () {
+                          context.read<Password>().pass(_controllerMaster.text);
+                          _showDialog(context);
+                        },
+                      )),
+                ),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // bytes = utf8.encode(_controllerMaster.text);
-                //digest = md5.convert(bytes);
-                context.read<Password>().hive(_controllerMaster.text);
-              },
-              child: const Text("Submit"),
-            ),
-            Text(context.watch<Password>().value)
+            /* Positioned(
+              bottom: 10,
+              right: 10,
+              child: IconButton(
+                iconSize: 50,
+                icon: const Icon(Icons.add_circle),
+                onPressed: (){
+
+                },
+              ),
+            ) */
           ],
         ),
       ),
     );
   }
+}
+void _showDialog(BuildContext context) {
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          title: Text("WRONG!"),
+          content: Text("Please, Enter Key"),
+          actions: <Widget>[
+
+          ],
+        );
+      }
+  );
 }
