@@ -1,5 +1,7 @@
+import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/password.dart';
+import 'package:flutter_application_2/master_key_page.dart';
+import 'package:flutter_application_2/passwords_page.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 
@@ -8,24 +10,31 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (c) => Password()),
+        ChangeNotifierProvider(create: (c) => MasterKeyPage()),
       ],
-      child: const MyApp(),
+      child: MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+
+  final routerDelegate = BeamerDelegate(
+      locationBuilder: RoutesLocationBuilder(routes: {
+    "/": (p0, p1, p2) => const MyHomePage(title: "MainPage"),
+    "/password_page": (p0, p1, p2) => const PasswordPage(),
+  }));
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routeInformationParser: BeamerParser(),
+      routerDelegate: routerDelegate,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Password Manager'),
     );
   }
 }
@@ -41,8 +50,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controllerMaster = TextEditingController();
-  static var bytes;
-  static var digest;
+  //static var bytes;
+  //static var digest;
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +80,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send),
                         onPressed: () {
-                          context.read<Password>().pass(_controllerMaster.text);
-                          _showDialog(context);
+                          context
+                              .read<MasterKeyPage>()
+                              .pass(_controllerMaster.text);
+                          Beamer.of(context).beamToNamed("/password_page");
                         },
                       )),
                 ),
@@ -95,6 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
 void _showDialog(BuildContext context) {
   showDialog(
       context: context,
@@ -102,10 +114,7 @@ void _showDialog(BuildContext context) {
         return const AlertDialog(
           title: Text("WRONG!"),
           content: Text("Please, Enter Key"),
-          actions: <Widget>[
-
-          ],
+          actions: <Widget>[],
         );
-      }
-  );
+      });
 }
