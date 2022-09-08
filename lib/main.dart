@@ -1,13 +1,15 @@
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_2/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   await Hive.initFlutter();
-  await Hive.openBox('data_box');
+  // await Hive.openBox('data_box');
   runApp(
     MultiProvider(
       providers: [
