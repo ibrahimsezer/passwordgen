@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 void main() async {
   await Hive.initFlutter();
+  await Hive.openBox('data_box');
   runApp(
     MultiProvider(
       providers: [
@@ -50,8 +51,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controllerMaster = TextEditingController();
-  //static var bytes;
-  //static var digest;
 
   @override
   Widget build(BuildContext context) {
