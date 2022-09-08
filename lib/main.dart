@@ -57,7 +57,26 @@ class _MyHomePageState extends State<MyHomePage> {
             Icons.add,
             size: 40.0,
           ),
-          onPressed: () async {},
+          onPressed: () {
+            showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                      title: Text('New User'),
+                      content: TextFormField(
+                        controller: _controllerMaster,
+                        decoration: InputDecoration(
+                          hintText: 'Master Key',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.security_update_good),
+                            onPressed: () {
+
+                            },
+                          )
+                          
+                        ),
+                      ),
+                    ));
+          },
         ),
         body: Stack(
           children: [
@@ -71,8 +90,19 @@ class _MyHomePageState extends State<MyHomePage> {
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send),
                         onPressed: () {
+<<<<<<< Updated upstream
                           context.read<Password>().pass(_controllerMaster.text);
                           _showDialog(context);
+=======
+                          if (_controllerMaster.text.isEmpty) {
+                            _showDialog(context);
+                          } else {
+                            context
+                                .read<MasterKeyPage>()
+                                .pass(_controllerMaster.text);
+                            Beamer.of(context).beamToNamed("/password_page");
+                          }
+>>>>>>> Stashed changes
                         },
                       )),
                 ),
