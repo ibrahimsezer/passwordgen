@@ -1,10 +1,8 @@
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_application_2/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
 import 'package:hive_flutter/adapters.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -67,7 +65,21 @@ class _MyHomePageState extends State<MyHomePage> {
             Icons.add,
             size: 40.0,
           ),
-          onPressed: () async {},
+          onPressed: () {
+            showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                      title: const Text('New User'),
+                      content: TextFormField(
+                        decoration: InputDecoration(
+                            hintText: 'Master Key',
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.security_update_good),
+                              onPressed: () {},
+                            )),
+                      ),
+                    ));
+          },
         ),
         body: Stack(
           children: [
@@ -81,10 +93,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send),
                         onPressed: () {
-                          context
-                              .read<MasterKeyPage>()
-                              .pass(_controllerMaster.text);
-                          Beamer.of(context).beamToNamed("/password_page");
+                          if (_controllerMaster.text.isEmpty) {
+                            _showDialog(context);
+                          } else {
+                            context
+                                .read<MasterKeyPage>()
+                                .pass(_controllerMaster.text);
+                            Beamer.of(context).beamToNamed("/password_page");
+                          }
                         },
                       )),
                 ),
