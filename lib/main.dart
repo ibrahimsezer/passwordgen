@@ -1,17 +1,19 @@
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/master_key_page.dart';
+import 'package:flutter_application_2/view_model/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
+import 'package:flutter_application_2/view_model/pass_button_visibility.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   await Hive.initFlutter();
-  // await Hive.openBox('data_box');
+  await Hive.openBox('data_box');
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (c) => MasterKeyPage()),
+        ChangeNotifierProvider(create: (c) => PassButtonVisibility()),
       ],
       child: MyApp(),
     ),
