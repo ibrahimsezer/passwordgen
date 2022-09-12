@@ -1,8 +1,14 @@
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'package:flutter_application_2/view_model/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
 import 'package:flutter_application_2/view_model/pass_button_visibility.dart';
+=======
+import 'package:flutter/services.dart';
+import 'package:flutter_application_2/passwords_page.dart';
+import 'package:flutter_application_2/view_model/master_key_page.dart';
+>>>>>>> Stashed changes
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 
@@ -67,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Icons.add,
             size: 40.0,
           ),
+<<<<<<< Updated upstream
           onPressed: () {
             showDialog(
                 context: context,
@@ -81,6 +88,49 @@ class _MyHomePageState extends State<MyHomePage> {
                             )),
                       ),
                     ));
+=======
+          onPressed: () async {
+            var temp = await context.read<MasterKeyPage>().passRead();
+            print('temp : $temp');
+            if (temp == '') {
+              showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                        title: const Text('New User'),
+                        content: TextFormField(
+                          controller: _masterKey,
+                          decoration: InputDecoration(
+                              hintText: 'Master Key',
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.security_update_good),
+                                onPressed: () async {
+                                  context
+                                      .read<MasterKeyPage>()
+                                      .pass(_masterKey.text);
+                                  const snackBar = SnackBar(
+                                    content: Text('registered'),
+                                  );
+
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+                                  Navigator.of(context).pop();
+                                },
+                              )),
+                        ),
+                      ));
+            } else {
+              showDialog(
+                context: context,
+                builder: (_) => const AlertDialog(
+                  title: Icon(Icons.warning_amber, size: 30, color: Colors.red),
+                  content: Text(
+                    'There is registered user',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              );
+            }
+>>>>>>> Stashed changes
           },
         ),
         body: Stack(
