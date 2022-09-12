@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_2/helper/random_password.dart';
 import 'package:flutter_application_2/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -28,9 +25,9 @@ class MyApp extends StatelessWidget {
 
   final routerDelegate = BeamerDelegate(
       locationBuilder: RoutesLocationBuilder(routes: {
-        "/": (p0, p1, p2) => const MyHomePage(title: "MainPage"),
-        "/password_page": (p0, p1, p2) => const PasswordPage(),
-      }));
+    "/": (p0, p1, p2) => const MyHomePage(title: "MainPage"),
+    "/password_page": (p0, p1, p2) => const PasswordPage(),
+  }));
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     auth.isDeviceSupported().then(
           (bool isSupported) => setState(() => _supportState = isSupported
-          ? _SupportState.supported
-          : _SupportState.unsupported),
-    );
+              ? _SupportState.supported
+              : _SupportState.unsupported),
+        );
   }
 
   Future<void> _checkBiometrics() async {
@@ -120,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     setState(
-            () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
+        () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
   }
 
   Future<void> _authenticateWithBiometrics() async {
@@ -181,27 +178,47 @@ class _MyHomePageState extends State<MyHomePage> {
             Icons.add,
             size: 40.0,
           ),
-          onPressed: () {
-            showDialog(
+          onPressed: () async {
+            var temp = await context.read<MasterKeyPage>().passRead();
+            print('xd $temp');
+            if (temp == '') {
+              showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                        title: const Text('New User'),
+                        content: TextFormField(
+                          controller: _masterKey,
+                          decoration: InputDecoration(
+                              hintText: 'Master Key',
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.security_update_good),
+                                onPressed: () async {
+                                  context
+                                      .read<MasterKeyPage>()
+                                      .pass(_masterKey.text);
+                                  const snackBar = SnackBar(
+                                    content: Text('registered'),
+                                  );
+
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+                                  Navigator.of(context).pop();
+                                },
+                              )),
+                        ),
+                      ));
+            } else {
+              showDialog(
                 context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('New User'),
-                  content: TextFormField(
-                    controller: _masterKey,
-                    decoration: InputDecoration(
-                        hintText: 'Master Key',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.security_update_good),
-                          onPressed: () async {
-                            context
-                                .read<MasterKeyPage>()
-                                .pass(_masterKey.text);
-                            var temp = await context
-                                .read<MasterKeyPage>();
-                          },
-                        )),
-                  ),
-                ));
+                builder: (_) => const AlertDialog(
+                  title: Icon(Icons.warning_amber,
+                  size: 30,
+                  color: Colors.red),
+                  content: Text('There is registered user',
+                  style: TextStyle(fontWeight: FontWeight.bold),),
+                ),
+              );
+            }
           },
         ),
         body: Stack(
@@ -217,7 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: const Icon(Icons.send),
                         onPressed: () async {
                           var temp =
-                          //await context.read<MasterKeyPage>().passRead();
+                              await context.read<MasterKeyPage>().passRead();
                           if (_controllerMaster.text.isEmpty) {
                             _showDialog(context);
                           } else {
@@ -244,10 +261,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                       AlertDialog(
                                         title: Row(
                                           children: const [
-                                            Icon(Icons.warning_amber, size: 30,
-                                              color: Colors.red,),
-                                            Text(' ALERT',
-                                              style: TextStyle(color: Colors.red),)
+                                            Icon(
+                                              Icons.warning_amber,
+                                              size: 30,
+                                              color: Colors.red,
+                                            ),
+                                            Text(
+                                              ' ALERT',
+                                              style:
+                                                  TextStyle(color: Colors.red),
+                                            )
                                           ],
                                         ),
                                         content: const Text('Wrong Password'),

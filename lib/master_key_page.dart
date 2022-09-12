@@ -7,7 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 
 class MasterKeyPage extends ChangeNotifier {
-  String _value = "";
+  var _value ;
   String _copyText = "";
 
   String get value => _value;
@@ -46,6 +46,32 @@ class MasterKeyPage extends ChangeNotifier {
     _value = await encryptedBox.get("Master");
 
     notifyListeners();
+  }
+
+  Future<String?> passRead() async{
+    const secureStorage = FlutterSecureStorage();
+    final encrypionKey = await secureStorage.read(key: "key");
+    if (encrypionKey == null) {
+      final key = Hive.generateSecureKey();
+      await secureStorage.write(
+        key: "key",
+        value: base64UrlEncode(key),
+      );
+    }
+    final key = await secureStorage.read(key: "key");
+    final encryptionKey = base64Url.decode(key!);
+    final encryptedBox = await Hive.openBox("vaultBox",
+        encryptionCipher: HiveAesCipher(encryptionKey));
+    _value = await encryptedBox.get("Master");
+    print(_value);
+    notifyListeners();
+    if(_value == null ){
+      return "";
+    }
+    return _value;
+
+
+
   }
 
 }
