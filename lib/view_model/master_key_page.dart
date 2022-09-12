@@ -5,15 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 
 class MasterKeyPage extends ChangeNotifier {
-<<<<<<< Updated upstream
   String _value = "";
-=======
-<<<<<<<< Updated upstream:lib/master_key_page.dart
-  String _value = "";
-========
-  var _value;
->>>>>>>> Stashed changes:lib/view_model/master_key_page.dart
->>>>>>> Stashed changes
   String _copyText = "";
 
   String get value => _value;
@@ -34,14 +26,11 @@ class MasterKeyPage extends ChangeNotifier {
       ..showSnackBar(snackbar);
   }
 
-<<<<<<< Updated upstream
   bool _obsecureText = true;
   void _showHideText() {
     _obsecureText = !_obsecureText;
   }
 
-=======
->>>>>>> Stashed changes
   void pass(String text) async {
     const secureStorage = FlutterSecureStorage();
     final encrypionKey = await secureStorage.read(key: "key");
@@ -61,33 +50,4 @@ class MasterKeyPage extends ChangeNotifier {
 
     notifyListeners();
   }
-<<<<<<< Updated upstream
-=======
-<<<<<<<< Updated upstream:lib/master_key_page.dart
-========
-
-  Future<String?> passRead() async {
-    const secureStorage = FlutterSecureStorage();
-    final encrypionKey = await secureStorage.read(key: "key");
-    if (encrypionKey == null) {
-      final key = Hive.generateSecureKey();
-      await secureStorage.write(
-        key: "key",
-        value: base64UrlEncode(key),
-      );
-    }
-    final key = await secureStorage.read(key: "key");
-    final encryptionKey = base64Url.decode(key!);
-    final encryptedBox = await Hive.openBox("vaultBox",
-        encryptionCipher: HiveAesCipher(encryptionKey));
-    _value = await encryptedBox.get("Master");
-    print(_value);
-    notifyListeners();
-    if (_value == null) {
-      return "";
-    }
-    return _value;
-  }
->>>>>>>> Stashed changes:lib/view_model/master_key_page.dart
->>>>>>> Stashed changes
 }
