@@ -1,33 +1,46 @@
+import 'dart:io';
+
+import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/password.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_2/helper/random_password.dart';
+import 'package:flutter_application_2/master_key_page.dart';
+import 'package:flutter_application_2/passwords_page.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   await Hive.initFlutter();
+  // await Hive.openBox('data_box');
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (c) => Password()),
+        ChangeNotifierProvider(create: (c) => MasterKeyPage()),
       ],
-      child: const MyApp(),
+      child: MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+
+  final routerDelegate = BeamerDelegate(
+      locationBuilder: RoutesLocationBuilder(routes: {
+        "/": (p0, p1, p2) => const MyHomePage(title: "MainPage"),
+        "/password_page": (p0, p1, p2) => const PasswordPage(),
+      }));
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routeInformationParser: BeamerParser(),
+      routerDelegate: routerDelegate,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Password Manager'),
     );
   }
 }
@@ -49,24 +62,22 @@ class _MyHomePageState extends State<MyHomePage> {
   String _authorized = 'Not Authorized';
   bool _isAuthenticating = false;
   final TextEditingController _controllerMaster = TextEditingController();
-  static var bytes;
-  static var digest;
+  final TextEditingController _masterKey = TextEditingController();
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     auth.isDeviceSupported().then(
           (bool isSupported) => setState(() => _supportState = isSupported
-              ? _SupportState.supported
-              : _SupportState.unsupported),
-        );
+          ? _SupportState.supported
+          : _SupportState.unsupported),
+    );
   }
 
   Future<void> _checkBiometrics() async {
     late bool canCheckBiometrics;
     try {
-      _canCheckBiometrics = await auth.canCheckBiometrics;
+      canCheckBiometrics = await auth.canCheckBiometrics;
     } on PlatformException catch (e) {
       canCheckBiometrics = false;
       print(e);
@@ -80,24 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _getAvailableBiometrics() async {
-    late List<BiometricType> availableBiometrics;
-    try {
-      availableBiometrics = await auth.getAvailableBiometrics();
-    } on PlatformException catch (e) {
-      availableBiometrics = <BiometricType>[];
-      print(e);
-    }
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _availableBiometrics = availableBiometrics;
-    });
-  }
-
-  /* Future<void> _authenticate() async {
+  Future<void> _authenticate() async {
     bool authenticated = false;
     try {
       setState(() {
@@ -107,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
       authenticated = await auth.authenticate(
         localizedReason: 'Let OS determine authentication method',
         options: const AuthenticationOptions(
-          stickyAuth: false,
+          stickyAuth: true,
         ),
       );
       setState(() {
@@ -126,24 +120,25 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     setState(
-        () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
-  } */
+            () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
+  }
 
   Future<void> _authenticateWithBiometrics() async {
     bool authenticated = false;
     try {
+      print('1 $_authorized');
       setState(() {
         _isAuthenticating = true;
         _authorized = 'Authenticating';
       });
       authenticated = await auth.authenticate(
-        localizedReason:
-            'Scan your fingerprint (or face or whatever) to authenticate',
+        localizedReason: 'Scan your fingerprint to authenticate',
         options: const AuthenticationOptions(
           stickyAuth: false,
           biometricOnly: true,
         ),
       );
+      print('2 $_authorized');
       setState(() {
         _isAuthenticating = false;
         _authorized = 'Authenticating';
@@ -161,9 +156,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     final String message = authenticated ? 'Authorized' : 'Not Authorized';
+    print('3 $_authorized');
     setState(() {
       _authorized = message;
     });
+    print('4 $_authorized');
   }
 
   Future<void> _cancelAuthentication() async {
@@ -188,21 +185,23 @@ class _MyHomePageState extends State<MyHomePage> {
             showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                      title: Text('New User'),
-                      content: TextFormField(
-                        controller: _controllerMaster,
-                        decoration: InputDecoration(
-                          hintText: 'Master Key',
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.security_update_good),
-                            onPressed: () {
-
-                            },
-                          )
-                          
-                        ),
-                      ),
-                    ));
+                  title: const Text('New User'),
+                  content: TextFormField(
+                    controller: _masterKey,
+                    decoration: InputDecoration(
+                        hintText: 'Master Key',
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.security_update_good),
+                          onPressed: () async {
+                            context
+                                .read<MasterKeyPage>()
+                                .pass(_masterKey.text);
+                            var temp = await context
+                                .read<MasterKeyPage>();
+                          },
+                        )),
+                  ),
+                ));
           },
         ),
         body: Stack(
@@ -216,35 +215,49 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: "Master Key",
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send),
-                        onPressed: () {
-
-                          context.read<Password>().pass(_controllerMaster.text);
-                          _showDialog(context);
-
+                        onPressed: () async {
+                          var temp =
+                          //await context.read<MasterKeyPage>().passRead();
                           if (_controllerMaster.text.isEmpty) {
                             _showDialog(context);
                           } else {
-                            showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                      title: const Text(
-                                          'Fingerprint Authenticate'),
-                                      actions: [
-                                        IconButton(
-                                          onPressed: _authenticateWithBiometrics,
-                                          icon: const Icon(
-                                              Icons.fingerprint_outlined),
+                            if (_controllerMaster.text == temp) {
+                              print('dogru');
+                              if (_isAuthenticating) {
+                                ElevatedButton(
+                                  onPressed: _cancelAuthentication,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const <Widget>[
+                                      Icon(Icons.cancel),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                await _authenticateWithBiometrics();
+                                print('Current State: $_authorized');
+                              }
+                            } else {
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                        title: Row(
+                                          children: const [
+                                            Icon(Icons.warning_amber, size: 30,
+                                              color: Colors.red,),
+                                            Text(' ALERT',
+                                              style: TextStyle(color: Colors.red),)
+                                          ],
                                         ),
-                                      ]);
-                                });
-
+                                        content: const Text('Wrong Password'),
+                                      ));
+                            }
                             /* context
                                 .read<MasterKeyPage>()
                                 .pass(_controllerMaster.text);
                             Beamer.of(context).beamToNamed("/password_page"); */
                           }
-
                         },
                       )),
                 ),
@@ -261,44 +274,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ) */
-            if (_isAuthenticating)
-              ElevatedButton(
-                onPressed: _cancelAuthentication,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const <Widget>[
-                    Icon(Icons.cancel),
-                  ],
-                ),
-              )
-            /* Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _authenticate,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const <Widget>[
-                        Icon(Icons.fingerprint_outlined),
-                      ],
-                    ),
-                  )
-                ],
-              ) */
           ],
         ),
       ),
     );
   }
 }
-
-
-enum _SupportState {
-  unknown,
-  supported,
-  unsupported,
-}
-
 
 void _showDialog(BuildContext context) {
   showDialog(
@@ -307,10 +288,13 @@ void _showDialog(BuildContext context) {
         return const AlertDialog(
           title: Text("WRONG!"),
           content: Text("Please, Enter Key"),
-          actions: <Widget>[
-
-          ],
+          actions: <Widget>[],
         );
-      }
-  );
+      });
+}
+
+enum _SupportState {
+  unknown,
+  supported,
+  unsupported,
 }
