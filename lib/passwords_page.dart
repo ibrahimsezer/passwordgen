@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/main.dart';
+import 'package:flutter_application_2/master_key_page.dart';
 import 'package:flutter_application_2/view_model/pass_button_visibility.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'helper/random_password.dart';
-import 'view_model/master_key_page.dart';
 
 class PasswordPage extends StatefulWidget {
   const PasswordPage({super.key});
@@ -65,11 +66,15 @@ class _PasswordPageState extends State<PasswordPage> {
         .showSnackBar(//ekranin alt kisminda itemin silindigini belirtme
             const SnackBar(content: Text('An item has been deleted')));
   }
+
   // TextFields' controllers
 
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController urlController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController oldPass = TextEditingController();
+  final TextEditingController newPass = TextEditingController();
+
 
   void _showForm(
     BuildContext ctx,
@@ -124,7 +129,7 @@ class _PasswordPageState extends State<PasswordPage> {
                     ),
                     TextField(
                       controller: urlController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: TextInputType.text,
                       decoration: InputDecoration(
                         hintText: 'Url',
                         suffixIcon: IconButton(
@@ -260,6 +265,48 @@ class _PasswordPageState extends State<PasswordPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('FrescoPass'),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('New Password'),
+                          actions: [
+                            Column(
+                              children: [
+                                TextFormField(
+                                  controller: oldPass,
+                                  decoration:
+                                      const InputDecoration(hintText: 'xdxd'),
+                                ),
+                                TextFormField(
+                                  controller: newPass,
+                                ),
+                              ],
+                            ),
+                            ElevatedButton(onPressed: () async {
+                              var temp = await context.read<MasterKeyPage>().passRead();
+                              if(oldPass.text == temp){
+                                 context.read<MasterKeyPage>().pass(newPass.text);
+                                showDialog(context: context, builder: (BuildContext context){
+                                  return const AlertDialog(
+                                    title: Text('Success'),
+                                    content: Text('Password changed succesfully.'),
+                                    backgroundColor: Colors.green,
+
+                                  );
+                                });
+                              }
+
+                            }, child: Icon(Icons.arrow_right_alt))
+                          ],
+                        );
+                      });
+                },
+                icon: Icon(Icons.key)),
+          ],
         ),
         body: _items.isEmpty
             ? const Center(

@@ -1,7 +1,7 @@
 import 'package:beamer/beamer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_2/view_model/master_key_page.dart';
+import 'package:flutter_application_2/master_key_page.dart';
 import 'package:flutter_application_2/passwords_page.dart';
 import 'package:flutter_application_2/view_model/pass_button_visibility.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -62,6 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isAuthenticating = false;
   final TextEditingController _controllerMaster = TextEditingController();
   final TextEditingController _masterKey = TextEditingController();
+
+
 
   @override
   void initState() {
@@ -182,7 +184,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           onPressed: () async {
             var temp = await context.read<MasterKeyPage>().passRead();
-            print('temp : $temp');
             if (temp == '') {
               showDialog(
                   context: context,
@@ -229,6 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: SizedBox(
                 width: screenSize.width / 1.1,
                 child: TextFormField(
+                  obscureText: true,
                   controller: _controllerMaster,
                   decoration: InputDecoration(
                       hintText: "Master Key",
@@ -237,11 +239,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: () async {
                           var temp =
                               await context.read<MasterKeyPage>().passRead();
-                          if (_controllerMaster.text.isEmpty) {
+                          print(temp);
+                          if (_controllerMaster.text.isEmpty ||
+                              _controllerMaster.text != temp ) {
                             _showDialog(context);
                           } else {
                             if (_controllerMaster.text == temp) {
-                              print('dogru');
                               if (_isAuthenticating) {
                                 ElevatedButton(
                                   onPressed: _cancelAuthentication,
@@ -255,6 +258,12 @@ class _MyHomePageState extends State<MyHomePage> {
                               } else {
                                 await _authenticateWithBiometrics();
                                 print('Current State: $_authorized');
+                                if(_authorized == 'Authorized'){
+                                  context
+                                      .read<MasterKeyPage>()
+                                      .pass(_controllerMaster.text);
+                                  Beamer.of(context).beamToNamed("/password_page");
+                                }
                               }
                             } else {
                               showDialog(
@@ -282,10 +291,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 .read<MasterKeyPage>()
                                 .pass(_controllerMaster.text);
                             Beamer.of(context).beamToNamed("/password_page"); */
-                            context
-                                .read<MasterKeyPage>()
-                                .pass(_controllerMaster.text);
-                            Beamer.of(context).beamToNamed("/password_page");
                           }
                         },
                       )),
@@ -314,10 +319,21 @@ void _showDialog(BuildContext context) {
   showDialog(
       context: context,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          title: Text("WRONG!"),
-          content: Text("Please, Enter Key"),
-          actions: <Widget>[],
+        return AlertDialog(
+          title: Row(
+            children: const [
+              Icon(
+                Icons.warning_amber,
+                size: 30,
+                color: Colors.red,
+              ),
+              Text(
+                ' WRONG',
+                style:
+                TextStyle(color: Colors.red),
+              )
+            ],
+          ),
         );
       });
 }
